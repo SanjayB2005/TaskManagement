@@ -3,11 +3,15 @@ const app = express();
 const mongoose = require('mongoose');
 const cors = require('cors');
 
+require('dotenv').config();
+
 app.use(express.json());
 app.use(cors());
   
 // server/index.js - Update MongoDB connection with more robust error handling
-mongoose.connect('mongodb://localhost:27017/mernstack', {
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/mernstack';
+
+mongoose.connect(MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
@@ -20,6 +24,9 @@ mongoose.connect('mongodb://localhost:27017/mernstack', {
 });
 
 // creating a schema with explicit deadline field
+// server/index.js - Update the schema
+// Update your schema to include duration and startedAt
+
 const todoSchema = new mongoose.Schema({
   title: {
     required: true,
@@ -31,10 +38,28 @@ const todoSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['To Do', 'On Progress', 'Done'],
+    enum: ['To Do', 'On Progress', 'Done', 'Timeout'],
     default: 'To Do'
+  },
+  duration: {
+    type: Number,  // Duration in minutes
+    default: 0
+  },
+  startedAt: {
+    type: Date // When the task was moved to "On Progress"
   }
 }, { timestamps: true });
+
+// Add a method to check if a task has timed out
+todoSchema.methods.hasTimedOut = function(maxDurationMinutes = 1440) { // Default 24 hours
+  if (this.status !== 'On Progress' || !this.startedAt) return false;
+  
+  const now = new Date();
+  const elapsedMs = now - this.startedAt;
+  const elapsedMinutes = Math.floor(elapsedMs / 60000);
+  
+  return elapsedMinutes > maxDurationMinutes;
+};
 
 // creating a model
 const todoModel = mongoose.model('Todo', todoSchema);
@@ -81,30 +106,63 @@ app.post('/todos', async(req, res) => {
   }
 });
 
-// Get all todos API
-app.get('/todos', async (req, res) => {
-  try {
-    const todos = await todoModel.find();
-    console.log("Fetched todos count:", todos.length);
-    // Log a few sample todos with their deadlines
-    if (todos.length > 0) {
-      console.log("Sample todo deadlines:", todos.slice(0, 3).map(t => ({
-        id: t._id,
-        title: t.title,
-        deadline: t.deadline || "No deadline"
-      })));
-    }
-    res.json(todos);
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({message: error.message});
-  }
-}); 
 
-// Update a todo
+// server/index.js - Add after other routes
+
+// Check for timed-out tasks
+// Add this endpoint after your other routes
+
+// Check for timed-out tasks
+app.get('/todos/check-timeout', async (req, res) => {
+  try {
+    const maxDuration = Number(req.query.maxDuration) || 1440; // Default to 24 hours (1440 minutes)
+    
+    // Find tasks in progress with a startedAt date
+    const tasksInProgress = await todoModel.find({ 
+      status: 'On Progress', 
+      startedAt: { $exists: true, $ne: null } 
+    });
+    
+    const now = new Date();
+    const timedOutTasks = [];
+    
+    // Check each task for timeout
+    for (const task of tasksInProgress) {
+      const elapsedMs = now - task.startedAt;
+      const elapsedMinutes = Math.floor(elapsedMs / 60000);
+      
+      // Calculate the duration spent so far
+      task.duration = elapsedMinutes;
+      
+      if (elapsedMinutes > maxDuration) {
+        // Task has timed out, update status
+        task.status = 'Timeout';
+        timedOutTasks.push(task._id);
+        await task.save();
+      } else {
+        // Just update the duration
+        await task.save();
+      }
+    }
+    
+    res.json({ 
+      checked: tasksInProgress.length,
+      timedOut: timedOutTasks.length,
+      taskIds: timedOutTasks
+    });
+  } catch (error) {
+    console.error("Error checking for timed-out tasks:", error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Update a task's status to handle the startedAt field
+// Update your PUT endpoint
+
+// Update a task's status to handle the startedAt field
 app.put("/todos/:id", async (req, res) => {
   try {
-    const {title, description, deadline, status} = req.body;
+    const {title, description, deadline, status, duration} = req.body;
     const id = req.params.id;
     
     console.log("Updating task:", id, req.body);
@@ -115,7 +173,29 @@ app.put("/todos/:id", async (req, res) => {
     if (title !== undefined) updateData.title = title;
     if (description !== undefined) updateData.description = description;
     if (deadline !== undefined) updateData.deadline = deadline;
-    if (status !== undefined) updateData.status = status;
+    if (duration !== undefined) updateData.duration = duration;
+    
+    // Special handling for status changes to track when tasks move to "On Progress"
+    if (status !== undefined) {
+      updateData.status = status;
+      
+      // If moving to "On Progress", set the startedAt field
+      if (status === "On Progress") {
+        // Check if it's already in progress
+        const currentTask = await todoModel.findById(id);
+        if (!currentTask || currentTask.status !== "On Progress") {
+          updateData.startedAt = new Date();
+        }
+      } else if (status === "Done") {
+        // When task is completed, calculate final duration if it was in progress
+        const currentTask = await todoModel.findById(id);
+        if (currentTask && currentTask.status === "On Progress" && currentTask.startedAt) {
+          const now = new Date();
+          const elapsedMs = now - currentTask.startedAt;
+          updateData.duration = Math.floor(elapsedMs / 60000); // Convert ms to minutes
+        }
+      }
+    }
     
     const updatedTodo = await todoModel.findByIdAndUpdate(id, updateData, {new: true});
     

@@ -1,6 +1,7 @@
+// client/src/Components/KanbanBoard.jsx - Update to include Timeout column
 import React, { useState, useEffect } from "react";
 import KanbanColumn from "./KanbanColumn";
-import { fetchTasks } from "../services/api";
+import { fetchTasks, checkTimeoutTasks } from "../services/api";
 
 function KanbanBoard({ refreshTrigger, searchQuery = "", activeFilter = "All", onTaskUpdated }) {
   const [tasks, setTasks] = useState([]);
@@ -12,8 +13,31 @@ function KanbanBoard({ refreshTrigger, searchQuery = "", activeFilter = "All", o
   const [columnsWithMatches, setColumnsWithMatches] = useState({
     todo: true,
     inProgress: true,
-    done: true
+    done: true,
+    timeout: true
   });
+
+  // Check for timed-out tasks every minute
+  useEffect(() => {
+    const checkTimeout = async () => {
+      try {
+        // Use 24 hours as max duration (1440 minutes)
+        await checkTimeoutTasks(1440);
+        // Refresh tasks after timeout check
+        setUpdateCounter(prev => prev + 1);
+      } catch (error) {
+        console.error("Error checking for task timeouts:", error);
+      }
+    };
+    
+    // Run immediately on component mount
+    checkTimeout();
+    
+    // Then set interval for regular checks
+    const intervalId = setInterval(checkTimeout, 60000); // Check every minute
+    
+    return () => clearInterval(intervalId);
+  }, []);
 
   // Fetch tasks
   useEffect(() => {
@@ -52,11 +76,13 @@ function KanbanBoard({ refreshTrigger, searchQuery = "", activeFilter = "All", o
     const todoHasMatches = filtered.some(task => task.status === "To Do");
     const inProgressHasMatches = filtered.some(task => task.status === "On Progress");
     const doneHasMatches = filtered.some(task => task.status === "Done");
+    const timeoutHasMatches = filtered.some(task => task.status === "Timeout");
     
     setColumnsWithMatches({
       todo: todoHasMatches,
       inProgress: inProgressHasMatches,
-      done: doneHasMatches
+      done: doneHasMatches,
+      timeout: timeoutHasMatches
     });
     
   }, [tasks, searchQuery]);
@@ -65,6 +91,7 @@ function KanbanBoard({ refreshTrigger, searchQuery = "", activeFilter = "All", o
   const todoTasks = filteredTasks.filter(task => task.status === "To Do");
   const inProgressTasks = filteredTasks.filter(task => task.status === "On Progress");
   const doneTasks = filteredTasks.filter(task => task.status === "Done");
+  const timeoutTasks = filteredTasks.filter(task => task.status === "Timeout");
 
   const handleTaskUpdated = () => {
     console.log("Task updated, refreshing board...");
@@ -91,8 +118,12 @@ function KanbanBoard({ refreshTrigger, searchQuery = "", activeFilter = "All", o
   const showDoneColumn = activeFilter === "All" && 
                         (searchQuery === "" || columnsWithMatches.done);
   
+  const showTimeoutColumn = activeFilter === "All" && 
+                        (searchQuery === "" || columnsWithMatches.timeout);
+  
   // Check if any columns are visible
-  const noColumnsVisible = !showToDoColumn && !showInProgressColumn && !showDoneColumn;
+  const noColumnsVisible = !showToDoColumn && !showInProgressColumn && 
+                          !showDoneColumn && !showTimeoutColumn;
 
   return (
     <div className="flex flex-1 shrink gap-10 justify-center basis-0 min-w-60 max-md:max-w-full">
@@ -140,20 +171,35 @@ function KanbanBoard({ refreshTrigger, searchQuery = "", activeFilter = "All", o
               onTaskUpdated={handleTaskUpdated}
             />
           )}
+          
+          {showTimeoutColumn && (
+            <KanbanColumn
+              title="Timeout"
+              count={timeoutTasks.length}
+              tasks={mapTasksToColumnFormat(timeoutTasks)}
+              dotColor="bg-red-500"
+              dividerSrc="https://cdn.builder.io/api/v1/image/assets/35cc7236b4564ae693ad7ccf2b8c203d/38cf1675a2977a9da0f0be331e66d4466fa76458370b9f331cd3c2ee5855a470?placeholderIfAbsent=true"
+              onTaskUpdated={handleTaskUpdated}
+            />
+          )}
         </div>
       )}
     </div>
   );
 }
 
-// Map tasks to the format expected by KanbanColumn
+// Update the mapTasksToColumnFormat function
+
 const mapTasksToColumnFormat = (tasksArray) => {
   return tasksArray.map(task => {
     return {
       id: task._id,
       title: task.title,
       description: task.description,
-      deadline: task.deadline || "Not set" // Ensure we always have a value
+      deadline: task.deadline || "Not set",
+      duration: task.duration || 0,
+      startedAt: task.startedAt || null,
+      status: task.status
     };
   });
 };

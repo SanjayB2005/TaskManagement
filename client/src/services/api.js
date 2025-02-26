@@ -67,3 +67,24 @@ export const deleteTask = async (id) => {
     throw error;
   }
 };
+
+
+// Add this function to your api.js file
+
+export const checkTimeoutTasks = async (maxDurationMinutes = 1440) => {
+  try {
+    console.log("API: Checking for timed-out tasks");
+    const response = await fetch(`${API_URL}/todos/check-timeout?maxDuration=${maxDurationMinutes}`);
+    
+    if (!response.ok) {
+      throw new Error(`Server returned status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log("API: Timeout check results:", data);
+    return data;
+  } catch (error) {
+    console.error("API: Error checking for timed-out tasks:", error);
+    throw error;
+  }
+};

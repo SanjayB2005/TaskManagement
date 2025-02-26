@@ -14,8 +14,11 @@ function TaskDashboard() {
     expired: 0,
     active: 0,
     completed: 0,
+    timedOut: 0, // Added timedOut stat
     total: 0
   });
+
+  
 
   // Function to update task stats
   const updateTaskStats = async () => {
@@ -26,10 +29,13 @@ function TaskDashboard() {
       let expired = 0;
       let active = 0;
       let completed = 0;
+      let timedOut = 0;
       
       tasks.forEach(task => {
         if (task.status === 'Done') {
           completed++;
+        } else if (task.status === 'Timeout') {
+          timedOut++;
         } else {
           active++;
           if (task.deadline) {
@@ -45,6 +51,7 @@ function TaskDashboard() {
         expired,
         active,
         completed,
+        timedOut, // Include timedOut in the state update
         total: tasks.length
       });
     } catch (error) {

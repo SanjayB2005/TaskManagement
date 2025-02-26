@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { updateTask, deleteTask } from "../services/api";
 import Calendar from "./Calendar";
 
-function TaskCard({ id, title, description, deadline, onTaskUpdated, status }) {
+function TaskCard({ id, title, description, deadline, onTaskUpdated, status, duration = 0, startedAt = null }) {
   const [showMenu, setShowMenu] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
@@ -12,24 +12,54 @@ function TaskCard({ id, title, description, deadline, onTaskUpdated, status }) {
     deadline
   });
   
+  // Format duration in minutes to "X hours Y minutes" format
+  const formatDuration = (minutes) => {
+    if (!minutes) return "0 min";
+    
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    
+    if (hours === 0) return `${mins} min`;
+    if (mins === 0) return `${hours} hr`;
+    return `${hours} hr ${mins} min`;
+  };
+
+  // Calculate elapsed time for tasks in progress
+  const calculateElapsed = (startTime) => {
+    if (!startTime) return 0;
+    
+    const started = new Date(startTime);
+    const now = new Date();
+    const elapsedMs = now - started;
+    return Math.floor(elapsedMs / 60000); // Convert ms to minutes
+  };
+  
   // Determine priority based on status
   const getPriority = () => {
     switch(status) {
       case "To Do":
-        // Updated to use the custom amber/orange color rgba(213, 141, 73, 1)
         return { 
           text: "Low", 
           color: "self-start px-1.5 py-1 text-xs font-medium text-amber-600 whitespace-nowrap rounded bg-amber-100 bg-opacity-20" 
         };
       case "On Progress":
+        let elapsedMin = 0;
+        if (startedAt) {
+          elapsedMin = calculateElapsed(startedAt);
+        }
         return { 
-          text: "High", 
+          text: `High (${formatDuration(elapsedMin)})`, 
           color: "self-start px-1.5 py-1 text-xs font-medium text-rose-500 whitespace-nowrap rounded bg-rose-300 bg-opacity-10" 
         };
       case "Done":
         return { 
-          text: "Completed", 
+          text: duration ? `Completed (${formatDuration(duration)})` : "Completed", 
           color: "self-start px-1.5 py-1 text-xs font-medium text-green-500 whitespace-nowrap rounded bg-green-100" 
+        };
+      case "Timeout":
+        return { 
+          text: "Timed Out", 
+          color: "self-start px-1.5 py-1 text-xs font-medium text-white whitespace-nowrap rounded bg-red-500" 
         };
       default:
         return { 

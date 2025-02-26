@@ -32,14 +32,16 @@ function KanbanColumn({ title, count, tasks, dotColor, dividerSrc, onTaskUpdated
           <img src={dividerSrc} className="w-full h-px object-cover" alt="" />
         </div>
         <div className="flex flex-col gap-[15px] mt-10 w-full">
-          {tasks.map((task) => (
+        {tasks.map((task) => (
             <TaskCard
               key={task.id}
               id={task.id}
               title={task.title}
               description={task.description}
               deadline={task.deadline}
-              status={columnStatus}
+              duration={task.duration}
+              startedAt={task.startedAt}
+              status={title === "To Do" ? "To Do" : title === "On Progress" ? "On Progress" : title === "Done" ? "Done" : "Timeout"}
               onTaskUpdated={onTaskUpdated}
             />
           ))}
