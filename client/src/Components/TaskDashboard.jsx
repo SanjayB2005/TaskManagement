@@ -91,7 +91,7 @@ function TaskDashboard() {
   };
 
   return (
-    <div className="overflow-hidden px-5 pt-12 pb-20 bg-white max-md:px-5">
+    <div className="px-5 pt-12 pb-20 bg-white max-md:px-5">
       <SearchHeader 
         onSearch={handleSearch} 
         onFilter={handleFilter} 
