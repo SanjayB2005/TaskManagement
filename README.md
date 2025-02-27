@@ -69,7 +69,7 @@ The application interacts with the backend through a RESTful API:
    ```bash
      cd server
     npm install
-3. Make sure MongoDB is running on your local machine
+3. Make sure MongoDB is running on your local machine (OR) to set `MONGODB_URI` to environment variables (`./server/.env`)
    ```bash
    # To start MongoDB locally (command may vary by installation method)
     mongod
@@ -91,6 +91,7 @@ The application interacts with the backend through a RESTful API:
    ```bash
    npm run dev
   The client will run on http://localhost:5173
+> NOTE: You have to set `VITE_SERVER_URI` to environment variables (`./client/.env`)
 
 
   ## MongoDB Schema
