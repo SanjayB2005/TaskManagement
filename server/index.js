@@ -20,7 +20,23 @@ app.use(express.json());
 //   optionsSuccessStatus: 200
 // }));
 // app.options('*', cors()); // Enable pre-flight for all routes
-app.use(cors());
+// Replace the current CORS configuration with this:
+app.use(cors({
+  origin: [
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'https://task-management-a5ee.vercel.app'
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  optionsSuccessStatus: 200
+}));
+
+// Enable pre-flight across all routes
+app.options('*', cors());
+
+// Rest of your server code...
   
 // server/index.js - Update MongoDB connection with more robust error handling
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/mernstack';
