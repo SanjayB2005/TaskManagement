@@ -1,8 +1,11 @@
 {
-  "name": "client",
+  "name": "task-management-api",
   "version": "1.0.0",
-  "description": "MERN Stack samplr project",
+  "description": "MERN Stack Task Management API",
   "main": "index.js",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
@@ -14,7 +17,13 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "mongoose": "^8.11.0",
+    "mongoose": "^8.0.0",
+    "whatwg-url": "^14.0.0",
+    "webidl-conversions": "^7.0.0",
+    "mongodb": "^6.0.0",
+    "mongodb-connection-string-url": "^3.0.0"
+  },
+  "devDependencies": {
     "nodemon": "^3.1.9"
   }
 }
