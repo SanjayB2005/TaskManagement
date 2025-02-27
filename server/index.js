@@ -11,7 +11,8 @@ app.use(cors());
 // server/index.js - Update MongoDB connection with more robust error handling
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/mernstack';
 
-mongoose.connect(MONGODB_URI, {
+// Update MongoDB connection
+mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
@@ -19,10 +20,17 @@ mongoose.connect(MONGODB_URI, {
   console.log('Connected to MongoDB successfully');
 })
 .catch((err) => {
-  console.error('Failed to connect to MongoDB:', err);
-  process.exit(1); // Exit if MongoDB connection fails
+  console.error('MongoDB connection error:', err);
 });
 
+// Add error handlers
+mongoose.connection.on('error', err => {
+  console.error('MongoDB connection error:', err);
+});
+
+mongoose.connection.on('disconnected', () => {
+  console.log('MongoDB disconnected');
+});
 // creating a schema with explicit deadline field
 // server/index.js - Update the schema
 // Update your schema to include duration and startedAt
