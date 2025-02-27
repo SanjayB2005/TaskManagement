@@ -11,8 +11,10 @@ app.use(cors({
   origin: ['http://localhost:5173', 'https://task-management-a5ee.vercel.app'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  optionsSuccessStatus: 200
 }));
+app.options('*', cors()); // Enable pre-flight for all routes
   
 // server/index.js - Update MongoDB connection with more robust error handling
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/mernstack';
@@ -235,6 +237,17 @@ app.delete("/todos/:id", async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(500).json({message: error.message});
+  }
+});
+
+// Add this route after your existing routes
+app.get('/todos', async (req, res) => {
+  try {
+    const todos = await todoModel.find({});
+    res.json(todos);
+  } catch (error) {
+    console.error("Error fetching todos:", error);
+    res.status(500).json({ message: error.message });
   }
 });
 
