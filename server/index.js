@@ -6,7 +6,13 @@ const cors = require('cors');
 require('dotenv').config();
 
 app.use(express.json());
-app.use(cors());
+// Update the CORS configuration
+app.use(cors({
+  origin: ['http://localhost:5173', 'https://task-management-a5ee.vercel.app'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
   
 // server/index.js - Update MongoDB connection with more robust error handling
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/mernstack';
