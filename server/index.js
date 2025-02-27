@@ -39,21 +39,38 @@ app.options('*', cors());
 // Rest of your server code...
   
 // server/index.js - Update MongoDB connection with more robust error handling
+// Replace your current MongoDB connection code with this:
+
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/mernstack';
 
-// Update MongoDB connection
-mongoose.connect(MONGODB_URI, {
+// Set a higher timeout for connections
+const MONGODB_OPTIONS = {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-})
-.then(() => {
-  console.log('Connected to MongoDB successfully');
-})
-.catch((err) => {
-  console.error('MongoDB connection error:', err);
-});
+  serverSelectionTimeoutMS: 30000, // Increase timeout to 30 seconds
+  socketTimeoutMS: 45000,          // Socket timeout
+  family: 4                        // Use IPv4, skip trying IPv6
+};
 
-// Add error handlers
+// Create a connection handler
+let dbConnection;
+
+const connectToDB = async () => {
+  try {
+    console.log("Attempting to connect to MongoDB...");
+    await mongoose.connect(MONGODB_URI, MONGODB_OPTIONS);
+    dbConnection = mongoose.connection;
+    console.log('Connected to MongoDB successfully');
+    
+    // Make sure the connection is ready before processing requests
+    return true;
+  } catch (err) {
+    console.error('MongoDB connection error:', err);
+    return false;
+  }
+};
+
+// Handle connection events
 mongoose.connection.on('error', err => {
   console.error('MongoDB connection error:', err);
 });
@@ -61,9 +78,21 @@ mongoose.connection.on('error', err => {
 mongoose.connection.on('disconnected', () => {
   console.log('MongoDB disconnected');
 });
-// creating a schema with explicit deadline field
-// server/index.js - Update the schema
-// Update your schema to include duration and startedAt
+
+// Ensure connected before handling requests
+app.use(async (req, res, next) => {
+  if (!mongoose.connection.readyState) {
+    console.log("Connection not ready, attempting to connect...");
+    const connected = await connectToDB();
+    if (!connected) {
+      return res.status(500).json({ message: "Database connection failed" });
+    }
+  }
+  next();
+});
+
+// Call connect immediately
+connectToDB();
 
 const todoSchema = new mongoose.Schema({
   title: {
@@ -262,9 +291,26 @@ app.delete("/todos/:id", async (req, res) => {
   }
 });
 
-// Add this route after your existing routes
-
-
+// Health check route
+app.get('/health', (req, res) => {
+  const dbState = mongoose.connection.readyState;
+  const dbStatus = {
+    0: 'disconnected',
+    1: 'connected',
+    2: 'connecting',
+    3: 'disconnecting'
+  };
+  
+  res.json({
+    status: 'ok',
+    timestamp: new Date(),
+    database: {
+      state: dbStatus[dbState] || 'unknown',
+      readyState: dbState
+    },
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
 
 app.get('/', (req, res) => {
   const routes = [
