@@ -21,20 +21,10 @@ app.use(express.json());
 // }));
 // app.options('*', cors()); // Enable pre-flight for all routes
 // Replace the current CORS configuration with this:
-app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'http://127.0.0.1:5173',
-    'https://task-management-a5ee.vercel.app'
-  ],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
-  optionsSuccessStatus: 200
-}));
+app.use(cors());
 
 // Enable pre-flight across all routes
-app.options('*', cors());
+// app.options('*', cors());
 
 // Rest of your server code...
   
