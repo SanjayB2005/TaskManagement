@@ -1,6 +1,4 @@
-const API_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://task-management-wheat-gamma.vercel.app/'
-  : 'http://localhost:8000';
+const API_URL = import.meta.env.VITE_SERVER_URI || 'http://localhost:8000';
 
 export const fetchTasks = async () => {
   try {
