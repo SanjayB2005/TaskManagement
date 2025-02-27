@@ -1,29 +1,24 @@
 {
   "name": "task-management-api",
   "version": "1.0.0",
-  "description": "MERN Stack Task Management API",
+  "description": "Task management API",
   "main": "index.js",
-  "engines": {
-    "node": ">=18.0.0"
-  },
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "nodemon index.js"
   },
-  "author": "Sanjay",
-  "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",
-    "dotenv": "^16.4.7",
-    "express": "^4.21.2",
-    "mongodb": "^6.0.0",
-    "mongodb-connection-string-url": "^3.0.0",
-    "mongoose": "^8.0.0",
-    "webidl-conversions": "^7.0.0",
-    "whatwg-url": "^14.0.0"
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "mongoose": "^6.9.0",
+    "whatwg-url": "^11.0.0",
+    "webidl-conversions": "^7.0.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.9"
+    "nodemon": "^2.0.20"
+  },
+  "engines": {
+    "node": "16.x"
   }
 }
