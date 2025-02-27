@@ -2,6 +2,7 @@ const API_URL = import.meta.env.VITE_SERVER_URI || 'http://localhost:8000';
 
 export const fetchTasks = async () => {
   try {
+    console.log("Fetching tasks from:", `${API_URL}/todos`);
     const response = await fetch(`${API_URL}/todos`, {
       method: 'GET',
       headers: {
@@ -12,11 +13,12 @@ export const fetchTasks = async () => {
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
     }
 
     const data = await response.json();
-    console.log("API: Fetched tasks:", data);
+    console.log("API: Fetched tasks successfully:", data);
     return data;
   } catch (error) {
     console.error("API: Error fetching tasks:", error);

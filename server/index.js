@@ -7,8 +7,13 @@ require('dotenv').config();
 
 app.use(express.json());
 // Update the CORS configuration
+// Update these lines at the top of your file
 app.use(cors({
-  origin: ['http://localhost:5173', 'https://task-management-a5ee.vercel.app'],
+  origin: [
+    'http://localhost:5173',
+    'https://task-management-a5ee.vercel.app',
+    
+  ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
@@ -241,6 +246,48 @@ app.delete("/todos/:id", async (req, res) => {
 });
 
 // Add this route after your existing routes
+
+
+
+app.get('/', (req, res) => {
+  const routes = [
+    '- GET    /todos',
+    '- POST   /todos',
+    '- PUT    /todos/:id',
+    '- DELETE /todos/:id',
+    '- GET    /todos/check-timeout'
+  ];
+
+  const htmlResponse = `
+    <html>
+      <head>
+        <title>Task Management API</title>
+        <style>
+          body { 
+            font-family: monospace; 
+            padding: 20px; 
+            line-height: 1.6;
+          }
+          h1 { color: #333; }
+          pre { 
+            background: #f4f4f4; 
+            padding: 15px; 
+            border-radius: 5px;
+          }
+        </style>
+      </head>
+      <body>
+        <h1>Task Management API</h1>
+        <p>Server is running on port ${port}</p>
+        <h2>Available Routes:</h2>
+        <pre>${routes.join('\n')}</pre>
+      </body>
+    </html>
+  `;
+
+  res.send(htmlResponse);
+});
+
 app.get('/todos', async (req, res) => {
   try {
     const todos = await todoModel.find({});
@@ -251,12 +298,14 @@ app.get('/todos', async (req, res) => {
   }
 });
 
-
-app.get('/' , (req, res) => {
-  res.send('Hello World!');
-});
-
-port = 8000;
+// Update the server startup code at the bottom of the file
+const port = process.env.PORT || 8000;
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
+  console.log(`Available routes:`);
+  console.log(`- GET    /todos`);
+  console.log(`- POST   /todos`);
+  console.log(`- PUT    /todos/:id`);
+  console.log(`- DELETE /todos/:id`);
+  console.log(`- GET    /todos/check-timeout`);
 });
