@@ -23,7 +23,7 @@ app.use(express.json());
 app.use(cors());
   
 // server/index.js - Update MongoDB connection with more robust error handling
-const MONGODB_URI = import.meta.env.MONGODB_URI || 'mongodb://localhost:27017/mernstack';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/mernstack';
 
 // Update MongoDB connection
 mongoose.connect(MONGODB_URI, {
