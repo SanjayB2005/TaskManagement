@@ -232,6 +232,11 @@ app.delete("/todos/:id", async (req, res) => {
   }
 });
 
+
+app.get('/' , (req, res) => {
+  res.send('Hello World!');
+});
+
 port = 8000;
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
