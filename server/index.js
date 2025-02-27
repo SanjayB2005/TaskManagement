@@ -8,18 +8,19 @@ require('dotenv').config();
 app.use(express.json());
 // Update the CORS configuration
 // Update these lines at the top of your file
-app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'https://task-management-a5ee.vercel.app',
+// app.use(cors({
+//   origin: [
+//     'http://localhost:5173',
+//     'https://task-management-a5ee.vercel.app',
     
-  ],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
-  optionsSuccessStatus: 200
-}));
-app.options('*', cors()); // Enable pre-flight for all routes
+//   ],
+//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+//   credentials: true,
+//   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+//   optionsSuccessStatus: 200
+// }));
+// app.options('*', cors()); // Enable pre-flight for all routes
+app.use(cors());
   
 // server/index.js - Update MongoDB connection with more robust error handling
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/mernstack';
